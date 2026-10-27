@@ -3,8 +3,10 @@ import dotenv from "dotenv"
 import { ChatGoogle } from "@langchain/google";
 import { ChatGroq } from "@langchain/groq"
 import { TavilySearch } from "@langchain/tavily";
-import {createAgent, tool} from "langchain"
+import {tool} from "langchain"
+import {ToolNode} from "@langchain/langgraph/prebuilt"
 import z from "zod";
+import { MessagesAnnotation, StateGraph } from "@langchain/langgraph";
 
 dotenv.config()
 
@@ -53,26 +55,83 @@ const tool2 = tool(
     }
 )
 
+// using langchain
+
+// const model = new ChatGoogle("gemini-3.5-flash")
+
+// app.post("/chat",async (req,res)=>{
+//     const {prompt} = req.body;
+//     const agent = createAgent({
+//         model,
+//         tools:[tool1,tool2]
+//     })
+//     const result = await agent.invoke({
+//         messages:[
+//             {
+//                 role:"user",
+//                 content: prompt
+//             }
+//         ]
+//     })
+//     console.log(result.messages)
+//     return res.json(result.messages[result.messages.length-1].content)
+// })
 
 
-const model = new ChatGoogle("gemini-3.5-flash")
+// Using langgraph
+const tools = [tool1,tool2]
 
-app.post("/chat",async (req,res)=>{
-    const {prompt} = req.body;
-    const agent = createAgent({
-        model,
-        tools:[tool1,tool2]
-    })
-    const result = await agent.invoke({
+const model = new ChatGoogle("gemini-3.5-flash").bindTools(tools)
+
+const toolNode = new ToolNode(tools)
+
+const agent = async(state)=>{
+    const result = await model.invoke(state.messages)
+    return {
+        messages:[result]
+    }
+}
+
+const shouldContinue = async (state)=>{
+    console.log(state)
+    if(state.messages[state.messages.length-1]?.tool_calls?.length>0){
+        return "tool_node"
+    }
+    else{
+        return "__end__"
+    }
+}
+
+
+// state=[
+//     HumanMessage:"",
+//     AIMessage:"",
+//     ToolMessage:"",
+//     AIMessage:""
+// ]
+
+const graph = new StateGraph(MessagesAnnotation)
+.addNode("agent",agent)
+.addNode("tool_node",toolNode)
+.addEdge("__start__","agent")
+.addConditionalEdges("agent",shouldContinue)
+.addEdge("tool_node","agent")
+.compile()
+
+
+
+app.post("/chat", async (req,res)=>{
+    const {prompt} = req.body  
+    const result = await graph.invoke({
         messages:[
             {
                 role:"user",
-                content: prompt
+                content:prompt
             }
         ]
-    })
+    }) 
     console.log(result.messages)
-    return res.json(result.messages[result.messages.length-1].content)
+    return res.json(result.messages[result.messages.length-1]?.content)
 })
 
 app.listen(port,()=>{
