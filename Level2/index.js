@@ -17,12 +17,28 @@ app.use(express.json())
 // ai agent = llm + tools
 
 // built in tool -> using Tavily Search
-const tool1 = new TavilySearch({
-  maxResults: 5,
-  topic: "general"
-});
+// const tool1 = new TavilySearch({
+//   maxResults: 5,
+//   topic: "general"
+// });
 
 // custom tool
+
+const tool1 = tool(
+    ({email,content})=>{
+        return `email sent successfully to ${email} with content ${content}`
+    },
+    {
+        name:"email_send_tool",
+        description:"use this tool to send email",
+        schema:z.object({
+            email:z.string().describe("sender email"),
+            content:z.string().describe("mail content for sending")
+        })
+    }
+)
+
+
 const tool2 = tool(
     ({a,b})=>{
         const result = `addition of ${a} and ${b} is 7`;
