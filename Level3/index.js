@@ -6,7 +6,7 @@ import { TavilySearch } from "@langchain/tavily";
 import {tool} from "langchain"
 import {ToolNode} from "@langchain/langgraph/prebuilt"
 import z from "zod";
-import { MessagesAnnotation, StateGraph, MemorySaver } from "@langchain/langgraph";
+import { MessagesAnnotation, StateGraph, MemorySaver, StateSchema } from "@langchain/langgraph";
 import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
 import { MongoClient } from "mongodb";
 
@@ -23,11 +23,29 @@ const client = new MongoClient("mongodb+srv://manishkumar1abc2_db_user:I8BVrudVN
 const checkpointer = new MongoDBSaver({client})
 
 
+const customState = new StateSchema({
+    prompt:z.string(),
+    approvalRequired:z.boolean(),
+    aiResponse:z.string(),
+    approved:z.boolean(),
+    result:z.string()
+})
+
 const model = new ChatGroq({
     model:"openai/gpt-oss-120b"
 })
 
-const agent = asyn
+const agent = async (state)=>{
+
+}
+
+const approvalNode = async (state)=>{
+
+}
+
+const actionNode = async (state)=>{
+    
+}
 
 
 
