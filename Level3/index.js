@@ -79,7 +79,14 @@ const approvalNode = async (state)=>{
 }
 
 const actionNode = async (state)=>{
-    
+    if(state.approved){
+        return {
+            result:`action approved ${state.aiResponse}`
+        }
+    }
+    return {
+        result:"action rejected by human."
+    }
 }
 
 const shouldContinue = async (state)=>{
