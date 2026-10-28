@@ -47,6 +47,28 @@ const actionNode = async (state)=>{
     
 }
 
+const shouldContinue = async (state)=>{
+    if(state.approvalRequired){
+        return "approval"
+    }
+    else{
+        return "__end__"
+    }   
+}
+
+
+const graph = new StateGraph(customState)
+.addNode("agent",agent)
+.addNode("approval",approvalNode)
+.addNode("action",actionNode)
+.addEdge("__start__","agent")
+.addConditionalEdges("agent",shouldContinue)
+.addEdge("approval","action")
+.addEdge("action","__end__")
+.compile({checkpointer})
+
+
+
 
 
 
