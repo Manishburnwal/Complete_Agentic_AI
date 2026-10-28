@@ -6,9 +6,10 @@ import { TavilySearch } from "@langchain/tavily";
 import {tool} from "langchain"
 import {ToolNode} from "@langchain/langgraph/prebuilt"
 import z from "zod";
-import { MessagesAnnotation, StateGraph, MemorySaver, StateSchema, interrupt } from "@langchain/langgraph";
+import { MessagesAnnotation, StateGraph, MemorySaver, StateSchema, interrupt, Command } from "@langchain/langgraph";
 import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
 import { MongoClient } from "mongodb";
+import {randomUUID} from "node:crypto"
 
 dotenv.config()
 
@@ -81,7 +82,7 @@ const approvalNode = async (state)=>{
 const actionNode = async (state)=>{
     if(state.approved){
         return {
-            result:`action approved ${state.aiResponse}`
+            result:`action approved`
         }
     }
     return {
@@ -111,7 +112,40 @@ const graph = new StateGraph(customState)
 
 
 
+app.post("/chat",async (req,res)=>{
+    const {prompt} = req.body
+    const threadId = randomUUID()
+    const result = await graph.invoke(
+        {
+            prompt
+        },
+        {
+            configurable:{thread_id:threadId}
+        }
+    )
+    return res.json({
+        threadId,
+        result:result.result,
+        ai:result.aiResponse
+    })
+})
 
+
+app.post("/chat/resume",async (req,res)=>{
+    const {threadId, answer} = req.body
+    const result = await graph.invoke(
+        new Command({
+            resume:String(answer)
+        }),
+        {
+            configurable:{thread_id:threadId}
+        }
+    )
+    return res.json({
+        threadId,
+        result:result.result
+    })
+})
 
 
 
