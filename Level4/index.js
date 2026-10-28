@@ -32,16 +32,17 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings,{
 
 
 const upload = async()=>{
-    const path = "./nodejspdf.pdf"
+    const path = "./knowledge.pdf"
     const buffer = fs.readFileSync(path)
 
     const pdfResult = new PDFParse({data:buffer})
     const result = await pdfResult.getText()
 
     const text = result.text
-    const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 100, chunkOverlap: 1 })
+    const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 })
     const docs = await splitter.createDocuments([text])
-    console.log(docs)
+    
+    await vectorStore.addDocuments(docs)
 }
 
 upload()
