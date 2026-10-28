@@ -6,7 +6,7 @@ import { TavilySearch } from "@langchain/tavily";
 import {tool} from "langchain"
 import {ToolNode} from "@langchain/langgraph/prebuilt"
 import z from "zod";
-import { MessagesAnnotation, StateGraph, MemorySaver, StateSchema } from "@langchain/langgraph";
+import { MessagesAnnotation, StateGraph, MemorySaver, StateSchema, interrupt } from "@langchain/langgraph";
 import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
 import { MongoClient } from "mongodb";
 
@@ -68,7 +68,14 @@ const agent = async (state)=>{
 }
    
 const approvalNode = async (state)=>{
-
+    const answer = interrupt({
+        message:"Do you approve this action",
+        prompt:state.prompt,
+        aiResponse:state.aiResponse
+    })
+    return {
+        approved:String(answer).trim().toLowerCase()==="yes"
+    }
 }
 
 const actionNode = async (state)=>{
