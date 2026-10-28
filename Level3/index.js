@@ -36,9 +36,37 @@ const model = new ChatGroq({
 })
 
 const agent = async (state)=>{
+    const result = await model.invoke([
+        {
+            role:"system",
+            content:`
+            You are a helpful assistant.
+            
+            If the user is getting or askign a normal question, respond normally and set approvalRequired:false.
 
+            If the request requires a sensitive external action, such as sending an email or deleting a file, set approvalRequired:true 
+
+            Return JSON with:
+            {
+                "response": "your response",
+                "approvalRequired": true or false
+            }
+            `
+        },
+        {
+            role:"user",
+            content:state.prompt
+        }
+    ])
+
+    const parsed = JSON.parse(result.content)
+
+    return {
+        aiResponse: parsed.response,
+        approvalRequired: parsed.approvalRequired,
+    }
 }
-
+   
 const approvalNode = async (state)=>{
 
 }
