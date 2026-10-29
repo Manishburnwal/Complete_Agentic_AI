@@ -7,5 +7,30 @@ const server = new McpServer({
     version:"1.0.0"
 })
 
+
+server.registerTool(
+    "addition",
+    {
+        description:"for adding two numbers",
+        inputSchema:z.object({
+            a:z.number(),
+            b:z.number()
+        })
+    },
+    async ({a,b})=>{
+        return {
+            content:[
+                {
+                    type:"text",
+                    text:`sum using this mcp tool is ${a} & ${b} = ${a+b}`
+                }
+            ]
+        }
+    }
+)
+
+
+
 const transport = new StdioServerTransport()
 server.connect(transport)
+
