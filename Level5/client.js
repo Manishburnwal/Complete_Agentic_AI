@@ -17,6 +17,10 @@ const client = new Client({
     version:"1.0.0"
 })
 
+const ai = new ChatGroq({
+    model:"openai/gpt-oss-120b"
+})
+
 async function start(){
 
     const transport = new StdioClientTransport({
@@ -27,28 +31,37 @@ async function start(){
     await client.connect(transport)
     
     const tools = await client.listTools()
-    console.log(tools)
-
-   
-
-
+    
+    const modelwithTools = ai.bindTools(
+        tools.map(t=>({
+            type:"function",
+            function:{
+                name:t.name,
+                description:t.description,
+                parameters:t.inputSchema
+            }
+        }))
+    )
 
     app.post("/chat", async (req,res)=>{
         const {prompt} = req.body
-        const ai = new ChatGroq({
-            model:"openai/gpt-oss-120b"
-        })
 
-        const result = await ai.invoke([
-            {
-                role:"system",
-                content:"you are jarvis and my assistant"
-            },
+        const result = await modelwithTools.invoke([
             {
                 role:"human",
                 content:prompt
             }
         ])
+        
+        if(result.tool_calls.length){
+            const tool = result.tool_calls[0]
+            const result = await client.callTool({
+                name:tool.name,
+                arguments:tool.args
+            })
+            return res.json(result.content[0].text)
+        }
+
         return res.json(result.content)
     })
 
