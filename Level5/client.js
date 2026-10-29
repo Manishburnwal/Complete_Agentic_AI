@@ -30,7 +30,7 @@ async function start(){
 
     await client.connect(transport)
     
-    const tools = await client.listTools()
+    const {tools} = await client.listTools()
     
     const modelwithTools = ai.bindTools(
         tools.map(t=>({
@@ -46,15 +46,15 @@ async function start(){
     app.post("/chat", async (req,res)=>{
         const {prompt} = req.body
 
-        const result = await modelwithTools.invoke([
+        const response = await modelwithTools.invoke([
             {
                 role:"human",
                 content:prompt
             }
         ])
         
-        if(result.tool_calls.length){
-            const tool = result.tool_calls[0]
+        if(response.tool_calls.length){
+            const tool = response.tool_calls[0]
             const result = await client.callTool({
                 name:tool.name,
                 arguments:tool.args
@@ -62,7 +62,7 @@ async function start(){
             return res.json(result.content[0].text)
         }
 
-        return res.json(result.content)
+        return res.json(response.content)
     })
 
     app.listen(port,()=>{
