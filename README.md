@@ -97,7 +97,7 @@ The conceptual learning phase is complete. My next goal is to strengthen my unde
 
 ## 🎯 Learning Goals
 
-- Understand the fundamentals of LLMs and how they power AI applications.
+- Understand the fundamentals of LLMs and how they power AI applications..
 - Build AI agents using JavaScript and Node.js.
 - Implement tool calling and multi-step agentic workflows.
 - Work with LangChain.js and LangGraph to orchestrate AI agents.
